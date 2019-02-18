@@ -31,8 +31,8 @@ void t2Callback();
 void t3Callback();
 
 //Task
- Task t1(2000, TASK_FOREVER, &t1Callback);
- Task t2(2000, TASK_FOREVER, &t2Callback);
+ Task t1(100, TASK_FOREVER, &t1Callback);
+ Task t2(15000, TASK_FOREVER, &t2Callback);
 
  Scheduler runner;
 
@@ -63,29 +63,29 @@ void receive_ota(const MQTT::Publish& pub){
 }
 
  void t1Callback(){
-       Serial.println("task 1");
+       Serial.println("task 1 OTA subscribe Firmware");
          if (WiFi.status() == WL_CONNECTED) {
-    if (!client.connected()) {
-      // Give ourselves a unique client name
-      if (client.connect(WiFi.macAddress())) {
-            client.set_callback(receive_ota);   // Register our callback for receiving OTA's
-            IPAddress local = WiFi.localIP();
-            String ipaddr = String(local[0]) + "." + String(local[1]) + "." + String(local[2]) + "." + String(local[3]);
-            String topic = "ota/" + ipaddr;
-            Serial.print("Subscribing to topic ");
-            Serial.println(topic);
-            client.subscribe(topic);
+            if (!client.connected()) {
+                  // Give ourselves a unique client name
+                  if (client.connect(WiFi.macAddress())) {
+                        client.set_callback(receive_ota);   // Register our callback for receiving OTA's
+                        IPAddress local = WiFi.localIP();
+                        String ipaddr = String(local[0]) + "." + String(local[1]) + "." + String(local[2]) + "." + String(local[3]);
+                        String topic = "ota/" + ipaddr;
+                        Serial.print("Subscribing to topic ");
+                        Serial.println(topic);
+                        client.subscribe(topic);
            
-      }
-    }
+                  }
+             }
 
-    if (client.connected())
+      if (client.connected())
       client.loop();
-  }
+       }
  }
 
  void t2Callback(){
-       Serial.println("task 2");
+       Serial.println("task 2 sensing DHT 11 dan publish to Firmware");
 
         delay(2000);
       float h = dht.readHumidity();
@@ -111,6 +111,7 @@ void receive_ota(const MQTT::Publish& pub){
 
 void setup(){
       Serial.begin(9600);
+      Serial.println("Arduino MQTT OTA with dht11 v2 ");
       //initialized Scheduler
       runner.init();
 
@@ -134,17 +135,22 @@ void setup(){
 
 void loop(){
 
-      runner.execute();
+     // runner.execute();
       if (WiFi.status() != WL_CONNECTED) {
             Serial.print("Connecting to ");
             Serial.print(ssid);
             Serial.println("...");
             WiFi.begin(ssid, pass);
-      if (WiFi.waitForConnectResult() != WL_CONNECTED)
-            return;
-            Serial.print("IP address: ");
-            Serial.println(WiFi.localIP());
-  }
+            if (WiFi.waitForConnectResult() != WL_CONNECTED)
+                  return;
+                  Serial.print("IP address: ");
+                  Serial.println(WiFi.localIP());
+      }
+
+      // if (WiFi.status() == WL_CONNECTED){
+            runner.execute();
+      // }
+      
 
          
 }
